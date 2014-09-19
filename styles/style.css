@@ -1,0 +1,250 @@
+
+html, body { height: 100%; font-family: Verdana; }
+
+h2{
+    position: absolute;
+    top: 5;
+    left: 10px;
+    font-weight: bold;
+	padding: 4px 6px;
+	border: 1px solid #FFF;
+	background-color: #eee;
+}
+
+
+#toolbox, #workflow
+{
+	position: relative;
+}
+
+#toolbox
+{
+	position: fixed;
+	width: 100%;
+    height: 100px;
+    background-color: lightgray;
+	z-index: 1;
+}
+
+#toolbox .controls li.dragging
+{
+	background-color: white;
+}
+
+
+#toolbox .controls li {
+	display: inline-block;	
+	vertical-align: middle;
+	border: 1px solid black;
+	padding: 5px 8px;
+	margin-right: 10px;
+	background-color: #efefef;
+	cursor: move;
+}
+
+#toolbox .controls 
+{
+	cursor: default;
+	user-select: none;    
+	-webkit-user-select: none;  /* Chrome all / Safari all */
+  	-moz-user-select: none;     /* Firefox all */
+  	-ms-user-select: none;      /* IE 10+ */	
+	padding-left: 20px;
+	height: 100%;
+	text-align: center;
+}
+
+#toolbox .controls:before {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+  margin-right: -0.25em; /* Adjusts for spacing */
+}
+
+#toolbox > section {
+	position: relative;
+	float:left;	
+	height: 100%;
+	border-right: 2px dashed #ddd;
+	min-width: 115px;
+}
+
+#toolbox > section h3
+{
+	font-size:14px;
+	font-weight: bold;
+	color: white;
+	background-color: gray;
+	padding: 2px 4px;
+	position: absolute;
+	bottom: 10px;
+	left: 9px;
+}
+
+#workflow h2{
+	top: 115px;
+}
+
+#workflow.dragging-over{
+	background-color: blue;
+}
+
+#workflow
+{
+	position: relative;
+    height:100%;
+    background-color: gray;
+	overflow: auto;
+	z-index: 0;
+}
+
+.cf:before,
+.cf:after {
+    content: " "; /* 1 */
+    display: table; /* 2 */
+}
+
+.cf:after {
+    clear: both;
+}
+
+#workflow .node
+{
+	position: absolute;
+	background-color: lightgray;
+	border: 1px solid #000;
+	padding: 4px 8px;
+	z-index: 2;
+}
+
+#workflow .node.dragging{
+	background-color: white;
+}
+
+#workflow svg
+{
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1
+}
+
+#workflow .node .startpoint, #workflow .node .endpoint
+{
+	position: absolute;
+	width:10px;
+	height: 10px;
+}
+
+#workflow .node .startpoint
+{
+	top: calc(50% - 5px);
+	right: -5px;
+	background-color: green;
+}
+
+#workflow .node.start-connecting{
+	background-color: #B6F5B3;
+}
+
+#workflow .node.end-connecting{
+	background-color: #F08B8B;
+}
+
+#workflow .node .endpoint
+{
+	top: calc(50% - 5px);
+	left: -5px;
+	background-color: red;
+}
+
+.node-connection
+{
+	stroke: #000;
+}
+
+.play-stop-button:before
+{
+	content: "\e605";
+}
+
+.playing .play-stop-button:before
+{
+	content: "\e607";
+}
+
+.node-connection.playing
+{
+	stroke: lightgreen;
+	stroke-dasharray: 20;
+  	animation: nodeplaying 5s infinite;
+	-webkit-animation: nodeplaying 10s linear infinite backwards;
+}
+
+@-webkit-keyframes nodeplaying {
+  from {
+	 stroke-dashoffset: 1000;  
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.buttons-list
+{
+	margin-top: 3px;
+}
+.buttons-list button
+{
+	float:left;
+	margin: 0;
+}
+
+button.config-button
+{
+	width: 21px;
+	height: 21px;
+	padding: 1px;
+	float: right;
+}
+
+button.config-button.active
+{
+	border-style: inset;
+}
+
+.config-list 
+{
+	display: none;
+	font-size: 10px;
+}
+
+x-range-config
+{
+	max-width: 150px;
+}
+
+.source-file x-range-config
+{
+	max-width: 200px;
+}
+
+.config-list > x-range-config:not(:last-child) {
+	padding-bottom: 5px;
+	border-bottom: 1px solid rgba(0,0,0, 0.4);
+	margin-bottom: 5px;
+}
+
+.config-list label
+{
+	font-weight: bold;
+}
+
+.config-list input[type=range]
+{
+	display: block;
+	
+}

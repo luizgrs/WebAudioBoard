@@ -1,0 +1,59 @@
+<! DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Audio</title>
+        <link href="styles/reset.css" rel="stylesheet" type="style/css" />
+		<link href="styles/icomoon.css" rel="stylesheet" type="style/css" />
+        <link href="styles/style.css" rel="stylesheet" type="style/css" />
+		<script src="scripts/customElements.js"></script>
+		<script src="scripts/AudioFlow.js"></script>
+		<script src="scripts/MyAudioNode.js"></script>
+		<script src="scripts/AudioConnection.js"></script>
+		<script src="scripts/AuxHelper.js"></script>		
+		<script src="scripts/ToolBoxItem.js"></script>
+		<script src="scripts/script.js"></script>		
+    </head>
+    <body>
+    <section id="toolbox">
+		<h2>Toolbox</h2>
+		<section>
+			<h3>Sources</h3>
+			<ul class="controls">
+				<li data-action="source-file">
+					<span class="control-icon icon-file"></span>
+					<span class="control-name">File</span>	
+				</li>
+				<li data-action="source-mic">
+					<span class="control-icon icon-microphone"></span>
+					<span class="control-name">Microphone</span>
+				</li>
+			</ul>
+		</section>
+		<section>
+			<h3>Destination</h3>
+			<ul class="controls">
+				<li data-action="dest-speaker">
+					<span class="icon-speaker control-icon"></span>
+					<span class="control-name">Speakers</span>
+				</li>
+			</ul>
+		</section>
+		<section>
+			<h3>Filters</h3>
+			<ul class="controls">
+				<li data-action="filter-delay">
+					<span class="icon-speaker control-icon"></span>
+					<span class="control-name">Speakers</span>
+				</li>
+			</ul>
+		</section>		
+		
+    </section>
+    <section id="workflow">
+        <h2>Audio Flow</h2>
+		<svg id="flowBackground" xmlns="http://www.w3.org/2000/svg">
+		</svg>
+    </section>
+    </body>
+</html>
