@@ -9,20 +9,23 @@ var MyAudioNode = function(type, flow){
 		,inputConn
 		,outputConn
 		,audioNode
-		,divConfig;
+		,divConfig
+		,loadingHint;
 	
 	me.getMyType = function(){ return myType; };
 	me.getElement = function(){ return element; };
 	me.getMyId = function(){ return myId; };
 	me.getNode = function(){ return audioNode; };
 	me.getOutputConnection = function(){ return outputConn; };
-	me.isReady = function(){ return true;   };
 	
 	function init(){	
 		audioNode = new MyAudioNode.Config[myType](flow.getAudioContext());
 		
-		if(audioNode.getNodeType() == MyAudioNode.NodeTypes.SOURCE)
+		if(audioNode.getNodeType() == MyAudioNode.NodeTypes.SOURCE){
 			audioNode.onended = audioNodePlaybackEnded;
+			audioNode.onloadingprogress = audioNodeLoadingProgress;
+			audioNode.onloadend = audioNodeLoadEnd;
+		}
 		createNodeUI();
 		
 		if(audioNode.setSpecificUI){
@@ -145,7 +148,7 @@ var MyAudioNode = function(type, flow){
 			element.appendChild(startPoint);
 		}
 		
-		if(audioNode.getNodeType() == MyAudioNode.NodeTypes.SOURCE || audioNode.hasConfig)
+		if(audioNode.hasConfig)
 		{
 			var configButton = document.createElement('button');
 			configButton.classList.add('icon-gear')
@@ -161,7 +164,35 @@ var MyAudioNode = function(type, flow){
 			startButton.addEventListener('click', playStopButtonClick);
 			
 			divButtons.appendChild(startButton);
-		}		
+			
+			loadingHint = document.createElement('div');
+			loadingHint.classList.add('icon-spinner2');
+			loadingHint.classList.add('loading-icon');
+			element.appendChild(loadingHint);
+		}
+	}
+	
+	function audioNodeLoadingProgress(e){
+		element.classList.remove('loaded');
+		element.classList.add('loading');
+		var color;
+		if(e.progress < 0.4)
+			color = 'rgba(255,0,0,0.4)';
+		else if(e.progress < 0.8)
+			color = 'rgba(255,255,0,0.4)';
+		else
+			color = 'rgba(0,255,0,0.4)';		
+			
+		var per = (e.progress*100).toFixed(0);
+		
+		loadingHint.style.background = '-webkit-linear-gradient(bottom, '+color+', '+color+' ' + per + '%, white ' + per + '%)'
+		loadingHint.innerText = per + '%';
+	}
+	
+	function audioNodeLoadEnd(e){
+		element.classList.add('loaded');
+		element.classList.remove('loading');
+		loadingHint.style.background = '';
 	}
 	
 	function configButtonClick(e){
@@ -447,6 +478,16 @@ MyAudioNode.Config['source-file'] = function(audioContext){
 				durationConfig.value = durationConfig.max;
 				
 		}
+	
+		function fireLoadingProgress(perc){
+			if(me.onloadingprogress)
+			{
+				var myE = new Event('loadingprogress');
+				myE.progress = perc;
+								
+				me.onloadingprogress(myE);
+			}
+		}
 		
 		function fileSelected(e){
 			if(inputFile.files)
@@ -454,8 +495,18 @@ MyAudioNode.Config['source-file'] = function(audioContext){
 				var reader = new FileReader();
 				reader.onloadend = fileLoaded;
 				reader.onerror = fileLoadError;
+				reader.onprogress = fileLoadProgress;
+				fireLoadingProgress(0);
 				reader.readAsArrayBuffer(inputFile.files[0]);
 			}
+		}
+	
+		function fileLoadProgress(e){
+			var p = 0;
+			if(e.lengthComputable)
+				p = (e.loaded / e.total) * 0.5; 
+			
+			fireLoadingProgress(p);
 		}
 	
 		function fileLoadError(){
@@ -510,7 +561,11 @@ MyAudioNode.Config['source-file'] = function(audioContext){
 				
 				recreateWebAudioNode();
 				
-				console.log('file load complete');
+				fireLoadingProgress(1);
+				
+				if(me.onloadend)
+					me.onloadend();
+				
     		}, decodeAudioFailed);
 		}
 		
@@ -536,6 +591,8 @@ MyAudioNode.Config['source-file'] = function(audioContext){
 		}
 		
 		me.onended = undefined;
+		me.onloadingprogress = undefined;
+		me.onloadend = undefined;
 };
 MyAudioNode.Config['source-file'].AllowedAudioTypes = function(){
 	var types = ['audio/wave', 'audio/wav', 'audio/x-wav', 'audio/x-pn-wav', "audio/vnd.wave"
@@ -561,6 +618,190 @@ MyAudioNode.Config['source-file'].AllowedAudioTypes = function(){
 	return acceptedTypes;
 }();
 	
+
+
+MyAudioNode.Config['source-url'] = function(audioContext){
+		var me = this
+			,inputs = 0
+			,outputs = 1
+			,webAudioNode
+			,playing = false
+			,targetAudioNode	
+			,ac = audioContext
+			,audioElement
+			,audioBuffer
+			,offsetConfig
+			,delayConfig
+			,playTime
+			,url = ''
+			,audioElement;
+
+		me.getOutputsCount = function(){ return outputs; };
+		me.getInputsCount = function(){ return inputs; };
+		me.getWebAudioNode = function(){ return webAudioNode; };
+		me.isPlaying = function(){ return playing; };
+		me.getNodeType = function(){ return MyAudioNode.NodeTypes.SOURCE; };
+	
+		me.requestPlay = function(sucess, failure){
+			if(!targetAudioNode)
+				throw 'there is no node to connect to'
+			
+			playing = true;
+			audioElement.start();
+			sucess();
+		};
+	
+		me.stop = function(){
+			if(webAudioNode)
+			{
+				if(playing)
+					webAudioNode.stop();				
+				
+				playing = false;
+				
+				//in order to play again we have to recreate the node
+				audioElement.pause();
+				audioElement.fastSeek(0);
+			}
+		};
+	
+		me.setSpecificUI = function(element){
+			buttonsList = element.querySelector('.buttons-list');
+			
+			var selectFileButton = document.createElement('button');
+			selectFileButton.classList.add('icon-link');
+			selectFileButton.addEventListener('click', inputUrl);
+			buttonsList.insertBefore(selectFileButton, buttonsList.childNodes[0]);
+			
+			audioElement = document.createElement('audio');
+			audioElement.style.display = 'none';
+			audioElement.addEventListener('ended', playbackEnded);
+			audioElement.addEventListener('progress', uriLoadProgress);
+			audioElement.addEventListener('error', uriLoadError);
+			element.appendChild(audioElement);
+			
+			
+			
+			var divConfig = element.querySelector('.config-list');
+			offsetConfig = document.createElement('x-range-config');
+			offsetConfig.textContent = 'Start Offset:';
+			offsetConfig.addEventListener('change', offsetConfigChanged);
+			divConfig.appendChild(offsetConfig);	
+			
+			delayConfig = document.createElement('x-range-config');
+			delayConfig.textContent = 'Delay Playback:';
+			delayConfig.max = 9999999;
+			divConfig.appendChild(delayConfig);
+			
+			durationConfig = document.createElement('x-range-config');
+			durationConfig.textContent = 'Playback Duration:';
+			divConfig.appendChild(durationConfig);
+		}
+		
+		
+		function inputUrl(){
+			url = prompt('Input any kind of valid URI:', url).trim();
+			
+			recreateWebAudioNode();
+		}		
+		
+		function fireLoadingProgress(perc){
+			if(me.onloadingprogress)
+			{
+				var myE = new Event('loadingprogress');
+				myE.progress = perc;
+								
+				me.onloadingprogress(myE);
+			}
+		}
+	
+		function uriLoadProgress(e){
+			var p = 0;
+			if(e.lengthComputable)
+				p = (e.loaded / e.total); 
+			
+			fireLoadingProgress(p);
+		}
+	
+		function uriLoadError(){
+			console.log(arguments);
+		}
+	
+		function recreateWebAudioNode(){
+			if(webAudioNode)
+			{
+				webAudioNode.disconnect();
+				delete webAudioNode;
+			}
+				
+			webAudioNode = ac.createBufferSource();
+			webAudioNode.onended = playbackEnded;			
+  			webAudioNode.buffer = audioBuffer; 
+				
+			if(targetAudioNode)
+				webAudioNode.connect(targetAudioNode.getWebAudioNode());
+		}
+	
+		function playbackEnded(e){
+			playing = false;
+			me.stop();
+			
+			if(me.onended)
+				me.onended();
+		}
+	
+		function fileLoaded(e){
+			ac.decodeAudioData(this.result, function(fileAudioBuffer) {
+				audioBuffer = fileAudioBuffer;
+      			
+				var rangeMax = Math.floor(audioBuffer.duration);
+				if(offsetConfig.value > rangeMax)
+					offsetConfig.value = rangeMax;
+				
+				if(durationConfig.value > rangeMax)
+					durationConfig.value = rangeMax;				
+				
+				var maxPlayback = durationConfig.value == durationConfig.max;
+				
+				durationConfig.max = rangeMax;
+				offsetConfig.max = rangeMax;
+				
+				if(maxPlayback)
+					durationConfig.value = rangeMax;
+				
+				recreateWebAudioNode();
+				
+				fireLoadingProgress(1);
+				
+				if(me.onloadend)
+					me.onloadend();
+				
+    		}, decodeAudioFailed);
+		}
+		
+		me.connect = function(target){
+			targetAudioNode = target;
+			
+			if(webAudioNode)
+				webAudioNode.connect(targetAudioNode.getWebAudioNode());
+		}
+		
+		me.disconnect = function(){
+			if(webAudioNode)
+			{
+				webAudioNode.disconnect();
+
+				if(playing)
+					me.stop();				
+			}
+		}
+		
+		me.onended = undefined;
+		me.onloadingprogress = undefined;
+		me.onloadend = undefined;
+};
+
+
 
 
 

@@ -1,10 +1,10 @@
 @font-face {
 	font-family: 'icomoon';
-	src:url('/fonts/icomoon.eot?-9bopqr');
-	src:url('/fonts/icomoon.eot?#iefix-9bopqr') format('embedded-opentype'),
-		url('/fonts/icomoon.woff?-9bopqr') format('woff'),
-		url('/fonts/icomoon.ttf?-9bopqr') format('truetype'),
-		url('/fonts/icomoon.svg?-9bopqr#icomoon') format('svg');
+	src:url('fonts/icomoon.eot?dglbbv');
+	src:url('fonts/icomoon.eot?#iefixdglbbv') format('embedded-opentype'),
+		url('fonts/icomoon.woff?dglbbv') format('woff'),
+		url('fonts/icomoon.ttf?dglbbv') format('truetype'),
+		url('fonts/icomoon.svg?dglbbv#icomoon') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -23,8 +23,17 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-.icon-microphone:before {
-	content: "\e60b";
+.icon-trashcan:before {
+	content: "\e610";
+}
+.icon-spinner2:before {
+	content: "\e612";
+}
+.icon-link:before {
+	content: "\e615";
+}
+.icon-newtab:before {
+	content: "\e616";
 }
 .icon-music:before {
 	content: "\e601";
@@ -70,4 +79,13 @@
 }
 .icon-speaker:before {
 	content: "\e60d";
+}
+.icon-trash:before {
+	content: "\e613";
+}
+.icon-world:before {
+	content: "\e614";
+}
+.icon-microphone:before {
+	content: "\e60b";
 }
