@@ -811,7 +811,7 @@ MyAudioNode.Config['dest-speaker'] = function(audioContext){
 		me.getNodeType = function(){ return MyAudioNode.NodeTypes.FILTER; };
 };
 
-MyAudioNode.Config['filter-echo'] = function(audioContext){
+MyAudioNode.Config['filter-reverb'] = function(audioContext){
 			var me = this
 			,inputs = 1
 			,outputs = 1
